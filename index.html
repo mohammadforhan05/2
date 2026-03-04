@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Baloo+Da+2:wght@700;800&family=Roboto:wght@700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Hind Siliguri',sans-serif;background:#f0f9f4;}
+input,textarea,button,select{font-family:'Hind Siliguri',sans-serif;}
+.page{display:none;min-height:100vh;}.page.active{display:block;}
+.fi{animation:fi 0.35s ease both;}
+@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-6px)}50%{transform:translateX(6px)}}
+@keyframes pop{0%{transform:scale(0.8);opacity:0}60%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 1s linear infinite;display:inline-block;}
+.btn{border:none;cursor:pointer;font-family:'Hind Siliguri',sans-serif;transition:all 0.15s;}.btn:active{transform:scale(0.96);}
+.inp{width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid #d1fae5;font-size:14px;outline:none;color:#1a2e1e;background:#fafffe;transition:border-color 0.2s;}.inp:focus{border-color:#065f46;}
+.card{background:white;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:1px solid #ecfdf5;margin-bottom:12px;}
+.topbar{background:linear-gradient(135deg,#022c22,#065f46);padding:16px 20px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.2);}
+.tabbar{background:white;display:flex;border-bottom:2px solid #ecfdf5;}
+.tabBtn{flex:1;padding:12px 6px;border:none;background:transparent;border-bottom:3px solid transparent;cursor:pointer;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#9ca3af;font-family:'Hind Siliguri',sans-serif;transition:all 0.2s;}
+.tabBtn.on{border-bottom-color:#065f46;color:#065f46;font-weight:700;}
+.toggle{width:48px;height:26px;border-radius:13px;background:#d1d5db;position:relative;transition:background 0.2s;flex-shrink:0;cursor:pointer;}.toggle.on{background:#065f46;}
+.tdot{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:white;transition:left 0.2s;box-shadow:0 2px 4px rgba(0,0,0,0.2);}.toggle.on .tdot{left:25px;}
+.rrow{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;border-left:3px solid transparent;transition:all 0.15s;}.rrow.sel{background:#f0fdf4;border-left-color:#065f46;}
+.rcircle{width:20px;height:20px;border-radius:50%;border:2px solid #9ca3af;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;}.rrow.sel .rcircle{border-color:#065f46;background:#065f46;}
+.rdot{width:8px;height:8px;border-radius:50%;background:white;}
+.abtn{border:none;background:transparent;padding:10px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Hind Siliguri',sans-serif;width:100%;transition:background 0.15s;}.abtn:hover{background:#f0fdf4;}
+.sbtn{padding:10px 4px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:'Hind Siliguri',sans-serif;width:100%;}
+.delbtn{background:#fee2e2;border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;color:#dc2626;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.icon{display:block;}
+/* image grid */
+.img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;}
+.img-thumb{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:#f0fdf4;border:1.5px solid #d1fae5;}
+.img-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.rm-btn{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;background:rgba(220,38,38,0.88);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;line-height:1;}
+.img-add-tile{aspect-ratio:1;border-radius:12px;border:2px dashed #6ee7b7;background:#f0fdf4;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;gap:5px;}
+.img-add-tile:hover{border-color:#059669;background:#dcfce7;}
+.img-add-tile span{font-size:11px;color:#059669;font-weight:700;font-family:'Hind Siliguri',sans-serif;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:#a7f3d0;border-radius:3px;}
+</style>
+</head>
+<body>
+
+<svg style="display:none"><defs>
+  <symbol id="ic-store" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></symbol>
+  <symbol id="ic-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+  <symbol id="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="ic-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+  <symbol id="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="ic-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  <symbol id="ic-pkg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></symbol>
+  <symbol id="ic-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></symbol>
+  <symbol id="ic-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></symbol>
+  <symbol id="ic-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></symbol>
+  <symbol id="ic-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></symbol>
+  <symbol id="ic-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+  <symbol id="ic-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></symbol>
+  <symbol id="ic-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></symbol>
+  <symbol id="ic-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="ic-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.52 4.9a19.8 19.8 0 01-3.07-8.67A2 2 0 012.43 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 9.91a16 16 0 006.72 6.72l1.28-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></symbol>
+  <symbol id="ic-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="ic-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
+  <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+  <symbol id="ic-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></symbol>
+  <symbol id="ic-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+</defs></svg>
+
+<!-- LOGIN -->
+<div id="p-login" class="page active">
+<div style="min-height:100vh;background:linear-gradient(135deg,#022c22,#065f46,#047857);display:flex;align-items:center;justify-content:center;padding:20px;">
+<div class="fi" style="background:white;border-radius:24px;padding:40px 32px;width:100%;max-width:380px;box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+<div style="text-align:center;margin-bottom:32px;">
+  <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#065f46,#059669);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 24px rgba(6,95,70,0.4);">
+    <svg class="icon" width="36" height="36" style="color:white;"><use href="#ic-store"/></svg>
+  </div>
+  <h1 style="font-family:'Baloo Da 2',sans-serif;font-size:26px;font-weight:800;color:#022c22;margin-bottom:6px;">অর্ডার ম্যানেজার</h1>
+  <p style="color:#6b7280;font-size:14px;">অ্যাডমিন প্যানেলে লগইন করুন</p>
+</div>
+<label style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:#374151;margin-bottom:8px;">
+  <svg class="icon" width="16" height="16" style="color:#065f46;"><use href="#ic-lock"/></svg> পাসওয়ার্ড
+</label>
+<input id="li" type="password" placeholder="পাসওয়ার্ড দিন" class="inp" style="margin-bottom:20px;"/>
+<button id="loginBtn" class="btn" style="width:100%;padding:14px;border-radius:12px;font-size:16px;font-weight:700;background:linear-gradient(135deg,#065f46,#059669);color:white;box-shadow:0 4px 16px rgba(6,95,70,0.4);display:flex;align-items:center;justify-content:center;gap:8px;">
+  লগইন করুন <svg class="icon" width="18" height="18" style="color:white;"><use href="#ic-back" transform="rotate(180,12,12)"/></svg>
+</button>
+<p style="text-align:center;margin-top:16px;font-size:12px;color:#9ca3af;">ডিফল্ট পাসওয়ার্ড: admin123</p>
+</div></div></div>
+
+<!-- DASHBOARD -->
+<div id="p-dash" class="page">
+<div class="topbar"><div style="max-width:600px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <svg class="icon" width="28" height="28" style="color:white;"><use href="#ic-store"/></svg>
+    <div><h1 style="font-family:'Baloo Da 2',sans-serif;font-size:20px;font-weight:800;color:white;">অর্ডার ম্যানেজার</h1><p style="color:#a7f3d0;font-size:12px;">অ্যাডমিন ড্যাশবোর্ড</p></div>
+  </div>
+  <button id="logoutBtn" class="btn" style="background:rgba(255,255,255,0.15);border-radius:10px;padding:8px 12px;color:white;font-size:13px;display:flex;align-items:center;gap:6px;">
+    <svg class="icon" width="16" height="16" style="color:white;"><use href="#ic-logout"/></svg> লগআউট
+  </button>
+</div></div>
+<div style="max-width:600px;margin:0 auto;padding:16px;">
+  <div id="stats" class="fi" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;margin-top:4px;"></div>
+  <button id="createBtn" class="btn" style="width:100%;padding:16px;border-radius:16px;border:2px dashed #059669;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);color:#065f46;font-size:15px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;">
+    <svg class="icon" width="22" height="22" style="color:#059669;"><use href="#ic-plus"/></svg> নতুন অর্ডার ফর্ম তৈরি করুন
+  </button>
+  <div id="flist"></div>
+</div></div>
+
+<!-- EDITOR -->
+<div id="p-editor" class="page">
+<div class="topbar"><div style="display:flex;align-items:center;gap:12px;">
+  <button id="edBack" class="btn" style="background:rgba(255,255,255,0.15);border-radius:10px;width:36px;height:36px;color:white;display:flex;align-items:center;justify-content:center;">
+    <svg class="icon" width="20" height="20" style="color:white;"><use href="#ic-back"/></svg>
+  </button>
+  <h2 id="etitle" style="font-family:'Baloo Da 2',sans-serif;font-size:20px;font-weight:800;color:white;"></h2>
+</div></div>
+<div class="tabbar">
+  <button class="tabBtn on" id="tb-basic" data-tab="basic"><svg class="icon" width="18" height="18"><use href="#ic-file"/></svg><span>মূল তথ্য</span></button>
+  <button class="tabBtn" id="tb-images" data-tab="images"><svg class="icon" width="18" height="18"><use href="#ic-img"/></svg><span>ছবি</span></button>
+  <button class="tabBtn" id="tb-delivery" data-tab="delivery"><svg class="icon" width="18" height="18"><use href="#ic-truck"/></svg><span>ডেলিভারি</span></button>
+</div>
+<div style="max-width:600px;margin:0 auto;padding:16px;">
+
+  <div id="tc-basic">
+    <div class="card">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#374151;margin-bottom:8px;"><svg class="icon" width="14" height="14" style="color:#065f46;"><use href="#ic-file"/></svg>শিরোনাম *</label>
+      <input id="ft" class="inp" placeholder="পণ্যের নাম লিখুন"/>
+    </div>
+    <div class="card">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#374151;margin-bottom:10px;"><svg class="icon" width="14" height="14" style="color:#065f46;"><use href="#ic-img"/></svg>টপবারের লোগো</label>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="logo-prev-wrap" style="width:72px;height:56px;border-radius:10px;overflow:hidden;background:#f0fdf4;border:2px solid #d1fae5;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" style="display:block;color:#9ca3af;opacity:0.5;"><use href="#ic-img"/></svg>
+        </div>
+        <div style="flex:1;">
+          <button id="logo-upload-btn" type="button" class="btn" style="width:100%;padding:10px 14px;border-radius:10px;border:2px dashed #6ee7b7;background:#f0fdf4;color:#065f46;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
+            <svg width="16" height="16" style="display:block;color:#059669;"><use href="#ic-plus"/></svg> লোগো বেছে নিন
+          </button>
+          <button id="logo-remove-btn" type="button" style="display:none;margin-top:6px;width:100%;padding:8px;border-radius:8px;border:none;background:#fee2e2;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer;font-family:'Hind Siliguri',sans-serif;">লোগো মুছুন</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#374151;margin-bottom:8px;"><svg class="icon" width="14" height="14" style="color:#065f46;"><use href="#ic-tag"/></svg>মূল্য (৳)</label>
+      <input id="fp" class="inp" placeholder="500"/>
+    </div>
+    <div class="card">
+      <div id="bprow" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+        <div id="bptog" class="toggle on"><div class="tdot"></div></div>
+        <span style="font-size:14px;color:#374151;font-weight:600;">Best Price ব্যাজ দেখাবো</span>
+      </div>
+    </div>
+    <div class="card">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#374151;margin-bottom:8px;"><svg class="icon" width="14" height="14" style="color:#065f46;"><use href="#ic-img"/></svg>ছবির ক্যাপশন</label>
+      <input id="fc" class="inp" placeholder="ছবির নিচে লেখা"/>
+    </div>
+    <div class="card">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#374151;margin-bottom:8px;"><svg class="icon" width="14" height="14" style="color:#065f46;"><use href="#ic-file"/></svg>পণ্যের বিবরণ</label>
+      <textarea id="fd" class="inp" rows="5" style="resize:vertical;" placeholder="পণ্য সম্পর্কে বিস্তারিত..."></textarea>
+    </div>
+  </div>
+
+  <div id="tc-images" style="display:none;">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <svg class="icon" width="16" height="16" style="color:#065f46;"><use href="#ic-img"/></svg>
+          <span style="font-size:14px;font-weight:700;color:#374151;">পণ্যের ছবি</span>
+          <span id="img-count-badge" style="background:#ecfdf5;color:#059669;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:700;">০টি</span>
+        </div>
+      </div>
+      <div id="img-grid" class="img-grid"></div>
+      <p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:4px;">+ চিহ্নে চাপ দিয়ে যত খুশি ছবি যোগ করুন</p>
+    </div>
+  </div>
+
+  <div id="tc-delivery" style="display:none;">
+    <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">ডেলিভারি চার্জের অপশন সেট করুন</p>
+    <div id="dlist"></div>
+    <button id="addDRBtn" class="btn" style="width:100%;padding:12px;border-radius:12px;border:2px dashed #059669;background:transparent;color:#065f46;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px;">
+      <svg class="icon" width="16" height="16" style="color:#059669;"><use href="#ic-plus"/></svg> নতুন অপশন
+    </button>
+  </div>
+
+  <button id="saveFormBtn" class="btn" style="width:100%;padding:16px;border-radius:16px;background:linear-gradient(135deg,#065f46,#059669);color:white;font-size:16px;font-weight:700;margin-top:20px;box-shadow:0 4px 20px rgba(6,95,70,0.4);display:flex;align-items:center;justify-content:center;gap:8px;">
+    <svg class="icon" width="20" height="20" style="color:white;"><use href="#ic-save"/></svg> সেভ করুন
+  </button>
+</div></div>
+
+<!-- ORDERS -->
+<div id="p-orders" class="page">
+<div class="topbar"><div style="display:flex;align-items:center;gap:12px;">
+  <button id="ordBack" class="btn" style="background:rgba(255,255,255,0.15);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+    <svg class="icon" width="20" height="20" style="color:white;"><use href="#ic-back"/></svg>
+  </button>
+  <div><h2 id="ot" style="font-family:'Baloo Da 2',sans-serif;font-size:18px;font-weight:800;color:white;"></h2><p id="oc" style="color:#a7f3d0;font-size:13px;"></p></div>
+</div></div>
+<div style="max-width:600px;margin:0 auto;padding:16px;"><div id="olist"></div></div></div>
+
+<!-- PUBLIC -->
+<div id="p-public" class="page">
+<div style="min-height:100vh;background:#f5f5f5;">
+  <div style="max-width:480px;margin:0 auto;">
+    <div id="pub-topbar" style="display:none;background:linear-gradient(135deg,#022c22,#065f46);padding:14px 16px;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+      <button id="pubBack" class="btn" style="background:rgba(255,255,255,0.15);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg class="icon" width="20" height="20" style="color:white;"><use href="#ic-back"/></svg>
+      </button>
+      
+      <div>
+        <p id="pub-title" style="font-family:'Baloo Da 2',sans-serif;font-size:16px;font-weight:800;color:white;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px;"></p>
+        <p style="color:#a7f3d0;font-size:11px;">পণ্যের পেজ</p>
+      </div>
+    </div>
+    <div id="pub-logo-bar" style="display:none;background:white;padding:10px 0 6px;text-align:center;border-bottom:1px solid #f0f0f0;"><img id="pub-logo" src="" alt="" style="max-height:56px;max-width:160px;object-fit:contain;display:inline-block;"/></div>
+    <div id="pcont" style="background:white;min-height:100vh;"></div>
+  </div>
+</div></div>
+
+<!-- SUCCESS -->
+<div id="p-success" class="page">
+<div style="min-height:100vh;background:linear-gradient(135deg,#f0fdf4,#dcfce7);">
+  <div id="suc-topbar" style="background:linear-gradient(135deg,#022c22,#065f46);padding:14px 16px;display:none;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+    <button id="sucBack" class="btn" style="background:rgba(255,255,255,0.15);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg class="icon" width="20" height="20" style="color:white;"><use href="#ic-back"/></svg>
+    </button>
+    <p style="font-family:'Baloo Da 2',sans-serif;font-size:16px;font-weight:800;color:white;">অর্ডার নিশ্চিত হয়েছে</p>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;padding:40px 20px;">
+  <div style="text-align:center;background:white;border-radius:24px;padding:40px 28px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.1);animation:pop 0.4s ease both;">
+    <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#065f46,#059669);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 24px rgba(6,95,70,0.3);">
+      <svg class="icon" width="40" height="40" style="color:white;"><use href="#ic-ok"/></svg>
+    </div>
+    <h2 style="font-family:'Baloo Da 2',sans-serif;font-size:24px;font-weight:800;color:#065f46;margin-bottom:12px;">অর্ডার সফল!</h2>
+    <p style="color:#374151;font-size:15px;line-height:1.7;">আপনার অর্ডার গৃহীত হয়েছে।<br/>আমরা শীঘ্রই যোগাযোগ করবো।</p>
+    <div id="sinfo" style="margin-top:20px;background:#f0fdf4;border-radius:16px;padding:16px;"></div>
+  </div>
+  </div>
+</div></div>
+
+
+<!-- Loading overlay -->
+<div id="load-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:20px;padding:32px 40px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="width:48px;height:48px;border:4px solid #d1fae5;border-top-color:#059669;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px;"></div>
+    <p style="font-family:'Hind Siliguri',sans-serif;color:#065f46;font-weight:700;font-size:15px;">লোড হচ্ছে...</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ── Supabase ── */
+  var SB="https://ljghsvfgfwcnhkdjdmof.supabase.co";
+  var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqZ2hzdmZnZndjbmhrZGpkbW9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNzU2MDMsImV4cCI6MjA4Nzk1MTYwM30.ZQ9VVdwOyz0Cc56fT10j7-dPmiKPT_A2L780K5KjZWo";
+  var H={"apikey":KEY,"Authorization":"Bearer "+KEY,"Content-Type":"application/json"};
+
+  async function dbGet(t,q){
+    var r=await fetch(SB+"/rest/v1/"+t+(q||""),{headers:H});
+    if(!r.ok){var e=await r.text();throw new Error(e);}
+    return r.json();
+  }
+  async function dbPost(t,d){
+    var r=await fetch(SB+"/rest/v1/"+t,{method:"POST",headers:Object.assign({},H,{"Prefer":"return=representation"}),body:JSON.stringify(d)});
+    if(!r.ok){var e=await r.text();throw new Error(e);}
+    return r.json();
+  }
+  async function dbPatch(t,id,d){
+    var r=await fetch(SB+"/rest/v1/"+t+"?id=eq."+id,{method:"PATCH",headers:Object.assign({},H,{"Prefer":"return=representation"}),body:JSON.stringify(d)});
+    if(!r.ok){var e=await r.text();throw new Error(e);}
+    return r.json();
+  }
+  async function dbDel(t,id){
+    var r=await fetch(SB+"/rest/v1/"+t+"?id=eq."+id,{method:"DELETE",headers:H});
+    if(!r.ok){var e=await r.text();throw new Error(e);}
+  }
+
+  /* helpers */
+  var PASS="admin123";
+  var forms=[],orders=[];
+  var eid=null,bpOn=true,drows=[],cofid=null,sdel=-1,dopts=[],imgList=[],logoData="";
+
+  function ld(on){var o=document.getElementById("load-ov");if(o)o.style.display=on?"flex":"none";}
+  function xe(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function sp(id){document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});document.getElementById("p-"+id).classList.add("active");window.scrollTo(0,0);}
+  function sh(id,sz,c){return "<svg width='"+sz+"' height='"+sz+"' style='display:block;color:"+c+";'><use href='#"+id+"'/></svg>";}
+  function goBack(){sp("dash");renderDash();}
+
+  function fr(row){/* db form row → local */
+    return {id:row.id,title:row.title||"",price:row.price||"",imageCaption:row.image_caption||"",
+      description:row.description||"",images:row.images||[],bestPrice:row.best_price!==false,
+      deliveryOptions:row.delivery_options||[],logo:row.logo||"",createdAt:row.created_at};
+  }
+  function or(row){/* db order row → local */
+    return {id:row.id,formId:row.form_id,name:row.name,phone:row.phone,
+      address:row.address,qty:row.qty||1,delivery:row.delivery||"",
+      status:row.status||"new",createdAt:row.created_at};
+  }
+
+  /* ── hash routing ── */
+  function chkHash(){
+    var h=window.location.hash;
+    if(h.indexOf("#/form/")===0){loadPub(h.replace("#/form/",""));}
+  }
+  window.addEventListener("hashchange",chkHash);
+
+  async function loadPub(fid,adminMode){
+    ld(true);
+    try{
+      var rows=await dbGet("forms","?id=eq."+fid+"&select=*");
+      if(rows&&rows[0]){renderPub(fr(rows[0]),adminMode);sp("public");}
+      else{document.getElementById("pcont").innerHTML="<div style='padding:40px;text-align:center;color:#6b7280;'>ফর্ম পাওয়া যায়নি</div>";sp("public");}
+    }catch(e){alert("লোড ব্যর্থ: "+e.message);}
+    ld(false);
+  }
+
+  /* ── LOGIN ── */
+  function doLogin(){
+    var p=document.getElementById("li").value;
+    if(p===PASS){loadDash();}
+    else{var el=document.getElementById("li");el.style.borderColor="#dc2626";el.style.animation="shake 0.5s";setTimeout(function(){el.style.animation="";el.style.borderColor="#d1fae5";},500);}
+  }
+  document.getElementById("loginBtn").addEventListener("click",doLogin);
+  document.getElementById("li").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
+  document.getElementById("logoutBtn").addEventListener("click",function(){document.getElementById("li").value="";sp("login");});
+
+  /* ── LOAD DASH DATA ── */
+  async function loadDash(){
+    ld(true);
+    try{
+      forms=(await dbGet("forms","?select=*&order=created_at.desc")).map(fr);
+      orders=(await dbGet("orders","?select=*&order=created_at.desc")).map(or);
+    }catch(e){alert("ডেটা লোড ব্যর্থ: "+e.message);}
+    ld(false);
+    sp("dash");renderDash();
+  }
+
+  /* ── STATS ── */
+  function sCard(l,v,ic,c){
+    return "<div style='background:white;border-radius:16px;padding:14px 8px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:1px solid #ecfdf5;'>"
+      +"<div style='display:flex;justify-content:center;margin-bottom:6px;'>"+sh(ic,22,c)+"</div>"
+      +"<div style='font-size:22px;font-weight:700;color:"+c+";'>"+v+"</div>"
+      +"<div style='font-size:11px;color:#6b7280;margin-top:2px;'>"+l+"</div></div>";
+  }
+
+  /* ── DASHBOARD ── */
+  function renderDash(){
+    var nc=orders.filter(function(o){return o.status==="new";}).length;
+    document.getElementById("stats").innerHTML=
+      sCard("মোট ফর্ম",forms.length,"ic-grid","#065f46")+
+      sCard("মোট অর্ডার",orders.length,"ic-pkg","#0891b2")+
+      sCard("নতুন অর্ডার",nc,"ic-bell","#dc2626");
+    var fl=document.getElementById("flist");
+    if(!forms.length){
+      fl.innerHTML="<div style='text-align:center;padding:50px 20px;color:#9ca3af;'><div style='display:flex;justify-content:center;margin-bottom:12px;opacity:0.3;'>"+sh("ic-pkg",56,"#9ca3af")+"</div><p>এখনো কোনো ফর্ম নেই।</p></div>";
+      return;
+    }
+    fl.innerHTML=forms.map(function(f,i){
+      var fo=orders.filter(function(o){return o.formId===f.id;});
+      var nc2=fo.filter(function(o){return o.status==="new";}).length;
+      var thumb=(f.images&&f.images[0])
+        ?"<img src='"+f.images[0]+"' style='width:100%;height:100%;object-fit:cover;' alt=''/>"
+        :"<div style='display:flex;justify-content:center;opacity:0.3;'>"+sh("ic-img",28,"#9ca3af")+"</div>";
+      var badge=nc2>0
+        ?"<span style='background:#fef2f2;color:#dc2626;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;'>"+fo.length+" অর্ডার ("+nc2+" নতুন)</span>"
+        :"<span style='background:#f9fafb;color:#6b7280;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;'>"+fo.length+" অর্ডার</span>";
+      return "<div class='fi' style='background:white;border-radius:20px;margin-bottom:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);border:1px solid #ecfdf5;animation-delay:"+(i*0.05)+"s;'>"
+        +"<div style='display:flex;gap:12px;padding:16px 16px 12px;'>"
+        +"<div style='width:60px;height:60px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#f0fdf4;display:flex;align-items:center;justify-content:center;'>"+thumb+"</div>"
+        +"<div style='flex:1;min-width:0;'><h3 style='font-weight:700;font-size:16px;color:#1a2e1e;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>"+xe(f.title||"নাম নেই")+"</h3>"
+        +"<div style='display:flex;gap:6px;flex-wrap:wrap;align-items:center;'><span style='background:#ecfdf5;color:#065f46;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;'>৳"+xe(f.price||"0")+"</span>"+badge+"</div></div></div>"
+        +"<div style='display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;border-top:1px solid #f0fdf4;'>"
+        +ab("ic-eye","দেখুন","preview",f.id,"#065f46")
+        +ab("ic-edit","এডিট","edit",f.id,"#0891b2")
+        +ab("ic-pkg","অর্ডার","orders",f.id,"#7c3aed")
+        +"<button class='abtn' data-action='share' data-id='"+f.id+"'>"+sh("ic-share",18,"#d97706")+"<span class='shlbl' style='font-size:10px;color:#d97706;font-weight:600;'>শেয়ার</span></button>"
+        +ab("ic-trash","ডিলিট","delete",f.id,"#dc2626")
+        +"</div></div>";
+    }).join("");
+  }
+  function ab(ic,lbl,act,id,c){
+    return "<button class='abtn' data-action='"+act+"' data-id='"+id+"'>"+sh(ic,18,c)+"<span style='font-size:10px;color:"+c+";font-weight:600;'>"+lbl+"</span></button>";
+  }
+  document.getElementById("flist").addEventListener("click",function(e){
+    var btn=e.target.closest("[data-action]");if(!btn)return;
+    var act=btn.dataset.action,id=btn.dataset.id;
+    if(act==="preview"){loadPub(id,true);}
+    else if(act==="edit")editF(id);
+    else if(act==="orders")viewO(id);
+    else if(act==="share"){
+      var url=location.href.split("#")[0]+"#/form/"+id;
+      var lbl=btn.querySelector(".shlbl");
+      function showCopied(){if(lbl){lbl.textContent="কপি!";setTimeout(function(){if(lbl)lbl.textContent="শেয়ার";},2200);}}
+      function fallbackCopy(){var ta=document.createElement("textarea");ta.value=url;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand("copy");showCopied();}catch(x){prompt("লিংকটি কপি করুন:",url);}document.body.removeChild(ta);}
+      if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(url).then(showCopied).catch(fallbackCopy);}else{fallbackCopy();}
+    }
+    else if(act==="delete"){
+      if(confirm("এই ফর্মটি ডিলিট করবেন?")){delForm(id);}
+    }
+  });
+
+  async function delForm(id){
+    ld(true);
+    try{
+      await dbDel("orders_table_placeholder_noop","noop"); /* orders cascade or delete separately */
+      /* delete orders for this form first */
+      await fetch(SB+"/rest/v1/orders?form_id=eq."+id,{method:"DELETE",headers:H});
+      await dbDel("forms",id);
+      forms=forms.filter(function(f){return f.id!==id;});
+      orders=orders.filter(function(o){return o.formId!==id;});
+    }catch(e){alert("ডিলিট ব্যর্থ: "+e.message);}
+    ld(false);
+    renderDash();
+  }
+
+  /* ── IMAGE GRID ── */
+  function renderImgGrid(){
+    var grid=document.getElementById("img-grid");
+    var badge=document.getElementById("img-count-badge");
+    if(!grid)return;
+    if(badge)badge.textContent=imgList.length+"টি";
+    var html="";
+    imgList.forEach(function(src,i){
+      html+="<div class='img-thumb'><img src='"+src+"' alt=''/><button class='rm-btn' data-rmidx='"+i+"' type='button'>✕</button></div>";
+    });
+    html+="<div class='img-add-tile' id='img-add-tile'><svg width='30' height='30' style='display:block;color:#059669;'><use href='#ic-plus'/></svg><span>ছবি যোগ</span></div>";
+    grid.innerHTML=html;
+    grid.querySelectorAll(".rm-btn").forEach(function(btn){
+      btn.addEventListener("click",function(e){e.stopPropagation();imgList.splice(parseInt(btn.getAttribute("data-rmidx")),1);renderImgGrid();});
+    });
+    var tile=document.getElementById("img-add-tile");
+    if(tile){
+      tile.addEventListener("click",function(){
+        var inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.multiple=true;inp.style.display="none";
+        document.body.appendChild(inp);
+        inp.addEventListener("change",function(){
+          var files=Array.from(inp.files);var pending=files.length;
+          if(!pending){document.body.removeChild(inp);return;}
+          files.forEach(function(file){
+            if(!file.type.startsWith("image/")){pending--;if(pending<=0){document.body.removeChild(inp);renderImgGrid();}return;}
+            var reader=new FileReader();
+            reader.onload=function(ev){imgList.push(ev.target.result);pending--;if(pending<=0){document.body.removeChild(inp);renderImgGrid();}};
+            reader.onerror=function(){pending--;if(pending<=0){document.body.removeChild(inp);renderImgGrid();}};
+            reader.readAsDataURL(file);
+          });
+        });
+        inp.click();
+      });
+    }
+  }
+
+  /* ── EDITOR ── */
+  function openEditor(){rdl();swTab("basic");sp("editor");initLogoUI();}
+  function initLogoUI(){
+    var prev=document.getElementById("logo-prev-wrap");
+    var rmBtn=document.getElementById("logo-remove-btn");
+    var upBtn=document.getElementById("logo-upload-btn");
+    if(!prev)return;
+    function refreshLogoUI(){
+      if(logoData){
+        prev.innerHTML="<img src='"+logoData+"' style='max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto;' alt=''/>";
+        if(rmBtn)rmBtn.style.display="block";
+        if(upBtn)upBtn.style.display="none";
+      } else {
+        prev.innerHTML="<svg width='24' height='24' style='display:block;color:#9ca3af;opacity:0.5;'><use href='#ic-img'/></svg>";
+        if(rmBtn)rmBtn.style.display="none";
+        if(upBtn)upBtn.style.display="flex";
+      }
+    }
+    refreshLogoUI();
+    if(upBtn){
+      upBtn.onclick=function(){
+        var inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.style.display="none";
+        document.body.appendChild(inp);
+        inp.addEventListener("change",function(){
+          var file=inp.files[0];
+          if(!file||!file.type.startsWith("image/")){document.body.removeChild(inp);return;}
+          var r=new FileReader();
+          r.onload=function(e){logoData=e.target.result;refreshLogoUI();document.body.removeChild(inp);};
+          r.readAsDataURL(file);
+        });
+        inp.click();
+      };
+    }
+    if(rmBtn){
+      rmBtn.onclick=function(){logoData="";refreshLogoUI();};
+    }
+  }
+
+  function goCreate(){
+    eid=null;bpOn=true;imgList=[];logoData="";
+    drows=[{label:"ঢাকার ভেতরে",price:"60"},{label:"সারা বাংলাদেশ",price:"130"}];
+    document.getElementById("etitle").textContent="নতুন ফর্ম তৈরি";
+    ["ft","fp","fc","fd"].forEach(function(x){document.getElementById(x).value="";});
+    document.getElementById("bptog").className="toggle on";
+    openEditor();
+  }
+  function editF(id){
+    var f=forms.find(function(x){return x.id===id;});if(!f)return;
+    eid=id;bpOn=f.bestPrice!==false;
+    imgList=(f.images||[]).filter(Boolean).slice();logoData=f.logo||"";
+    drows=JSON.parse(JSON.stringify(f.deliveryOptions||[]));
+    document.getElementById("etitle").textContent="ফর্ম এডিট করুন";
+    document.getElementById("ft").value=f.title||"";
+    document.getElementById("fp").value=f.price||"";
+    document.getElementById("fc").value=f.imageCaption||"";
+    document.getElementById("fd").value=f.description||"";
+    document.getElementById("bptog").className="toggle"+(bpOn?" on":"");
+    openEditor();
+  }
+  function swTab(t){
+    ["basic","images","delivery"].forEach(function(id){
+      document.getElementById("tc-"+id).style.display=id===t?"block":"none";
+      document.getElementById("tb-"+id).className="tabBtn"+(id===t?" on":"");
+    });
+    if(t==="images")renderImgGrid();
+  }
+  document.querySelectorAll(".tabBtn").forEach(function(btn){btn.addEventListener("click",function(){swTab(this.dataset.tab);});});
+  function togBP(){bpOn=!bpOn;document.getElementById("bptog").className="toggle"+(bpOn?" on":"");}
+  document.getElementById("bprow").addEventListener("click",togBP);
+
+  /* ── DELIVERY ── */
+  function rdl(){
+    document.getElementById("dlist").innerHTML=drows.map(function(r,i){
+      return "<div style='background:white;border-radius:16px;padding:14px;border:1px solid #d1fae5;margin-bottom:10px;'>"
+        +"<input class='inp' value='"+xe(r.label)+"' data-drow='"+i+"' data-field='label' placeholder='ডেলিভারি এলাকার নাম' style='margin-bottom:8px;'/>"
+        +"<div style='display:flex;gap:8px;align-items:center;'>"
+        +"<span style='font-size:15px;font-weight:700;color:#065f46;'>৳</span>"
+        +"<input class='inp' value='"+xe(r.price)+"' data-drow='"+i+"' data-field='price' placeholder='চার্জ' style='flex:1;'/>"
+        +(drows.length>1?"<button class='delbtn' data-idx='"+i+"' type='button'>"+sh("ic-trash",16,"#dc2626")+"</button>":"")
+        +"</div></div>";
+    }).join("");
+  }
+  document.getElementById("dlist").addEventListener("input",function(e){
+    var inp=e.target,idx=inp.getAttribute("data-drow");if(idx===null)return;
+    if(inp.getAttribute("data-field")==="label")drows[+idx].label=inp.value;
+    else drows[+idx].price=inp.value;
+  });
+  document.getElementById("dlist").addEventListener("click",function(e){
+    var btn=e.target.closest(".delbtn");
+    if(btn){drows.splice(+btn.getAttribute("data-idx"),1);rdl();}
+  });
+  document.getElementById("addDRBtn").addEventListener("click",function(){drows.push({label:"",price:""});rdl();});
+
+  /* ── SAVE FORM ── */
+  async function saveForm(){
+    var t=document.getElementById("ft").value.trim();
+    if(!t){alert("শিরোনাম দিন!");return;}
+    var payload={
+      title:t, price:document.getElementById("fp").value.trim(),
+      image_caption:document.getElementById("fc").value.trim(),
+      description:document.getElementById("fd").value.trim(),
+      images:imgList.slice(), logo:logoData, best_price:bpOn,
+      delivery_options:JSON.parse(JSON.stringify(drows))
+    };
+    ld(true);
+    try{
+      if(eid){
+        var rows=await dbPatch("forms",eid,payload);
+        var updated=fr(rows[0]);
+        var idx=forms.findIndex(function(x){return x.id===eid;});
+        if(idx>=0)forms[idx]=updated;
+      }else{
+        var rows=await dbPost("forms",payload);
+        forms.unshift(fr(rows[0]));
+      }
+    }catch(e){ld(false);alert("সেভ ব্যর্থ: "+e.message);return;}
+    ld(false);sp("dash");renderDash();
+  }
+  document.getElementById("saveFormBtn").addEventListener("click",saveForm);
+  document.getElementById("createBtn").addEventListener("click",goCreate);
+  document.getElementById("edBack").addEventListener("click",goBack);
+
+  /* ── ORDERS ── */
+  async function viewO(fid){
+    cofid=fid;
+    ld(true);
+    try{
+      var rows=await dbGet("orders","?form_id=eq."+fid+"&select=*&order=created_at.desc");
+      /* update local cache */
+      orders=orders.filter(function(o){return o.formId!==fid;});
+      rows.forEach(function(r){orders.push(or(r));});
+    }catch(e){alert("অর্ডার লোড ব্যর্থ: "+e.message);}
+    ld(false);
+    var f=forms.find(function(x){return x.id===fid;});
+    document.getElementById("ot").textContent=f?f.title:"অর্ডার";
+    renderOL();sp("orders");
+  }
+  function renderOL(){
+    var list=orders.filter(function(o){return o.formId===cofid;}).sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt);});
+    document.getElementById("oc").textContent=list.length+"টি অর্ডার";
+    var sc={"new":{l:"নতুন",bg:"#fef2f2",c:"#dc2626"},"processing":{l:"প্রক্রিয়াধীন",bg:"#fffbeb",c:"#d97706"},"done":{l:"সম্পন্ন",bg:"#f0fdf4",c:"#059669"}};
+    document.getElementById("olist").innerHTML=list.length===0
+      ?"<div style='text-align:center;padding:60px 20px;color:#9ca3af;'><div style='display:flex;justify-content:center;margin-bottom:12px;opacity:0.3;'>"+sh("ic-pkg",52,"#9ca3af")+"</div><p>এখনো কোনো অর্ডার নেই</p></div>"
+      :list.map(function(o,i){
+        var s=sc[o.status]||sc["new"];
+        return "<div class='fi' style='background:white;border-radius:20px;margin-bottom:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.07);border:1px solid #ecfdf5;animation-delay:"+(i*0.04)+"s;'>"
+          +"<div style='padding:14px 16px 10px;'>"
+          +"<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;'>"
+          +"<div style='display:flex;align-items:center;gap:10px;'>"
+          +"<div style='width:38px;height:38px;border-radius:50%;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;'>"+sh("ic-user",20,"#065f46")+"</div>"
+          +"<div><p style='font-weight:700;font-size:15px;color:#1a2e1e;'>"+xe(o.name)+"</p>"
+          +"<div style='display:flex;align-items:center;gap:4px;margin-top:2px;'>"+sh("ic-phone",12,"#9ca3af")+"<p style='color:#6b7280;font-size:12px;'>"+xe(o.phone)+"</p></div></div></div>"
+          +"<span style='background:"+s.bg+";color:"+s.c+";padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;'>"+s.l+"</span></div>"
+          +"<div style='display:flex;align-items:flex-start;gap:5px;margin-bottom:4px;'>"+sh("ic-pin",14,"#9ca3af")+"<p style='font-size:13px;color:#374151;'>"+xe(o.address)+"</p></div>"
+          +"<div style='display:flex;align-items:center;gap:5px;margin-bottom:4px;'><svg width='14' height='14' style='display:block;color:#7c3aed;'><use href='#ic-tag'/></svg><p style='font-size:13px;color:#7c3aed;font-weight:700;'>পরিমাণ: "+(o.qty||1)+"টি</p></div>"
+          +"<div style='display:flex;align-items:center;gap:5px;'>"+sh("ic-truck",14,"#065f46")+"<p style='font-size:13px;color:#065f46;font-weight:600;'>"+xe(o.delivery)+"</p></div>"
+          +"<p style='font-size:11px;color:#9ca3af;margin-top:6px;'>"+new Date(o.createdAt).toLocaleString("bn-BD")+"</p></div>"
+          +"<div style='display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #f0fdf4;'>"
+          +Object.keys(sc).map(function(k){return "<button class='sbtn' data-action='status' data-id='"+o.id+"' data-status='"+k+"' style='background:"+(o.status===k?sc[k].bg:"transparent")+";color:"+(o.status===k?sc[k].c:"#9ca3af")+";'>"+sc[k].l+"</button>";}).join("")
+          +"</div></div>";
+      }).join("");
+  }
+  document.getElementById("olist").addEventListener("click",function(e){
+    var btn=e.target.closest("[data-action='status']");if(!btn)return;
+    updStatus(btn.dataset.id,btn.dataset.status);
+  });
+  async function updStatus(id,status){
+    ld(true);
+    try{
+      await dbPatch("orders",id,{status:status});
+      var idx=orders.findIndex(function(o){return o.id===id;});
+      if(idx>=0)orders[idx].status=status;
+    }catch(e){alert("আপডেট ব্যর্থ: "+e.message);}
+    ld(false);renderOL();
+  }
+  document.getElementById("ordBack").addEventListener("click",goBack);
+
+  /* ── PUBLIC FORM ── */
+
+  function toBn(n){
+    return String(n).replace(/[0-9]/g,function(d){return '০১২৩৪৫৬৭৮৯'[d];});
+  }
+  function renderPub(f,adminMode){
+    var ct=document.getElementById("pcont");
+    var ptitle=document.getElementById("pub-title");
+    if(ptitle)ptitle.textContent=f.title||"পণ্য"; var tb=document.getElementById("pub-topbar");if(tb)tb.style.display=adminMode?"flex":"none"; var plb=document.getElementById("pub-logo-bar");var pl=document.getElementById("pub-logo");if(pl&&plb){if(f.logo){pl.src=f.logo;plb.style.display="block";}else{plb.style.display="none";}}
+
+    var imgs=(f.images||[]).filter(Boolean);
+    var ig="";
+    if(imgs.length===1){
+      ig="<div style='aspect-ratio:1.2;overflow:hidden;'><img src='"+imgs[0]+"' style='width:100%;height:100%;object-fit:cover;' alt=''/></div>";
+    }else if(imgs.length>1){
+      ig="<div style='display:flex;gap:6px;overflow-x:auto;padding:0 14px 10px;-webkit-overflow-scrolling:touch;'>";
+      imgs.forEach(function(src){ig+="<div style='flex-shrink:0;width:200px;height:170px;border-radius:14px;overflow:hidden;'><img src='"+src+"' style='width:100%;height:100%;object-fit:cover;' alt=''/></div>";});
+      ig+="</div>";
+    }
+    var cl=f.imageCaption?"<p style='text-align:center;font-size:13px;color:#6b7280;padding:8px 16px;border-bottom:1px solid #f0f0f0;'>"+xe(f.imageCaption)+"</p>":"";
+    var bp=f.bestPrice!==false?"<div style='background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;border-radius:12px;padding:8px 14px;text-align:center;'><div style='font-size:15px;font-weight:900;color:#dc2626;letter-spacing:1px;'>BEST</div><div style='font-size:15px;font-weight:900;color:#1d4ed8;letter-spacing:1px;'>PRICE</div></div>":"";
+    var desc2=f.description?"<div style='margin:0 14px 14px;background:#f9fafb;border-radius:16px;padding:16px;border:1px solid #e5e7eb;'><h3 style='font-family:\"Baloo Da 2\",sans-serif;font-weight:700;font-size:18px;color:#1a1a1a;margin-bottom:10px;text-align:center;border-bottom:2px solid #e5e7eb;padding-bottom:10px;'>Descriptions</h3><p style='font-size:14px;color:#374151;line-height:1.9;white-space:pre-wrap;'>"+xe(f.description)+"</p></div>":"";
+    var dp=f.deliveryOptions||[];dopts=dp;sdel=dp.length>0?0:-1;
+    var dhtml="";
+    if(dp.length){
+      dhtml="<div style='margin-top:12px;'><label style='font-size:14px;font-weight:700;color:#374151;display:block;margin-bottom:8px;'>ডেলিভারি:</label><div style='border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;'>";
+      dp.forEach(function(opt,i){dhtml+="<div id='dr"+i+"' class='rrow"+(i===0?" sel":"")+"' data-didx='"+i+"' style='border-bottom:"+(i<dp.length-1?"1px solid #f0f0f0":"none")+"'><span style='font-size:14px;color:#374151;font-weight:"+(i===0?600:400)+";'>"+xe(opt.label)+" (৳"+xe(opt.price)+")</span><div class='rcircle'>"+(i===0?"<div class='rdot'></div>":"")+"</div></div>";});
+      dhtml+="</div></div>";
+    }
+    var fH="<div style='margin:0 14px 16px;border:2px solid #e5e7eb;border-radius:16px;overflow:hidden;'>"
+      +"<div style='background:linear-gradient(135deg,#065f46,#059669);padding:12px 16px;text-align:center;'><h3 style='font-family:\"Baloo Da 2\",sans-serif;font-size:17px;font-weight:700;color:white;'>অর্ডার করতে</h3></div>"
+      +"<div style='padding:16px;'>"
+      +"<div style='margin-bottom:12px;'><label style='display:flex;align-items:center;gap:5px;font-size:14px;font-weight:700;color:#374151;margin-bottom:5px;'>"+sh("ic-user",14,"#065f46")+"নাম:</label><input id='pn' class='inp' placeholder='আপনার পূর্ণ নাম'/></div>"
+      +"<div style='margin-bottom:12px;'><label style='display:flex;align-items:center;gap:5px;font-size:14px;font-weight:700;color:#374151;margin-bottom:5px;'>"+sh("ic-phone",14,"#065f46")+"নাম্বার:</label><input id='pph' type='tel' class='inp' placeholder='মোবাইল নম্বর'/></div>"
+      +"<div style='margin-bottom:12px;'><label style='display:flex;align-items:center;gap:5px;font-size:14px;font-weight:700;color:#374151;margin-bottom:5px;'><svg width='14' height='14' style='display:block;color:#065f46;'><use href='#ic-tag'/></svg>পরিমাণ:</label>"
+      +"<div style='display:flex;align-items:center;border:1.5px solid #d1fae5;border-radius:10px;overflow:hidden;background:#fafffe;'>"
+      +"<button id='qty-minus' type='button' style='width:44px;height:44px;border:none;background:transparent;font-size:22px;font-weight:700;color:#065f46;cursor:pointer;flex-shrink:0;'>−</button>"
+      +"<input id='pqty' type='number' min='1' value='1' class='inp' style='border:none;border-left:1.5px solid #d1fae5;border-right:1.5px solid #d1fae5;border-radius:0;text-align:center;font-size:16px;font-weight:700;color:#065f46;padding:10px 6px;'/>"
+      +"<button id='qty-plus' type='button' style='width:44px;height:44px;border:none;background:transparent;font-size:22px;font-weight:700;color:#065f46;cursor:pointer;flex-shrink:0;'>+</button>"
+      +"</div></div>"
+      +"<div style='margin-bottom:12px;'><label style='display:flex;align-items:center;gap:5px;font-size:14px;font-weight:700;color:#374151;margin-bottom:5px;'>"+sh("ic-pin",14,"#065f46")+"ঠিকানা:</label><input id='pad' class='inp' placeholder='সম্পূর্ণ ঠিকানা'/></div>"
+      +dhtml+"</div></div>";
+    ct.innerHTML=
+      "<div style='padding:18px 16px 14px;border-bottom:1px solid #f0f0f0;'><h1 style='font-family:'Roboto',sans-serif;font-size:22px;font-weight:700;color:#1a1a1a;text-align:center;'>"+xe(f.title)+"</h1></div>"
+      +ig+cl
+      +"<div style='display:flex;align-items:center;justify-content:space-between;padding:14px 20px;'>"+bp
+      +"<div style='margin-left:auto;text-align:right;'><div style='font-size:12px;color:#9ca3af;font-weight:600;'>মূল্য</div><div style='font-size:30px;font-weight:800;color:#065f46;font-family:\"Baloo Da 2\",sans-serif;'>৳"+toBn(xe(f.price||"0"))+"</div></div></div>"
+      +desc2+fH
+      +"<div style='padding:0 14px 36px;'><button id='buybtn' class='btn' style='width:100%;padding:16px;border-radius:50px;background:linear-gradient(135deg,#065f46,#059669);color:white;font-size:17px;font-weight:800;box-shadow:0 6px 24px rgba(6,95,70,0.5);display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:1px;'>"+sh("ic-store",22,"white")+" BUY NOW</button></div>";
+
+    ct.querySelector("#buybtn").addEventListener("click",function(){subO(f.id,adminMode);});
+    ct.querySelector("#qty-minus").addEventListener("click",function(){var el=ct.querySelector("#pqty");var v=parseInt(el.value)||1;if(v>1)el.value=v-1;});
+    ct.querySelector("#qty-plus").addEventListener("click",function(){var el=ct.querySelector("#pqty");el.value=(parseInt(el.value)||1)+1;});
+    ct.addEventListener("click",function(e){
+      var row=e.target.closest("[data-didx]");if(!row)return;
+      var idx2=+row.getAttribute("data-didx");
+      dp.forEach(function(_,j){
+        var el=ct.querySelector("#dr"+j);if(!el)return;
+        el.className="rrow"+(j===idx2?" sel":"");
+        el.querySelector(".rcircle").innerHTML=j===idx2?"<div class='rdot'></div>":"";
+        el.querySelector("span").style.fontWeight=j===idx2?"600":"400";
+      });
+      sdel=idx2;
+    });
+  }
+
+  async function subO(fid,adminMode){
+    var pn=document.getElementById("pn"),pph=document.getElementById("pph"),pad=document.getElementById("pad"),pqty=document.getElementById("pqty");
+    if(!pn||!pph||!pad)return;
+    var nm=pn.value.trim(),ph=pph.value.trim(),ad=pad.value.trim();
+    var qty=pqty?Math.max(1,parseInt(pqty.value)||1):1;
+    if(!nm||!ph||!ad){alert("সব তথ্য পূরণ করুন!");return;}
+    if(dopts.length&&sdel<0){alert("ডেলিভারি বেছে নিন!");return;}
+    var del=dopts.length&&sdel>=0?dopts[sdel].label+" (৳"+dopts[sdel].price+")":"";
+    var btn=document.getElementById("buybtn");
+    btn.innerHTML="<span class='spin'>"+sh("ic-ok",22,"white")+"</span> অর্ডার হচ্ছে...";
+    btn.disabled=true;
+    try{
+      var rows=await dbPost("orders",{form_id:fid,name:nm,phone:ph,address:ad,qty:qty,delivery:del,status:"new"});
+      document.getElementById("sinfo").innerHTML=
+        "<div style='display:flex;align-items:center;gap:8px;margin-bottom:8px;'>"+sh("ic-user",16,"#065f46")+"<p style='font-weight:700;color:#1a2e1e;font-size:16px;'>"+xe(nm)+"</p></div>"
+        +"<div style='display:flex;align-items:center;gap:8px;margin-bottom:4px;'>"+sh("ic-phone",14,"#9ca3af")+"<p style='color:#6b7280;font-size:14px;'>"+xe(ph)+"</p></div>"
+        +"<div style='display:flex;align-items:center;gap:8px;margin-bottom:4px;'><svg width='14' height='14' style='display:block;color:#065f46;'><use href='#ic-tag'/></svg><p style='color:#065f46;font-size:14px;font-weight:700;'>পরিমাণ: "+qty+"টি</p></div>"
+        +(del?"<div style='display:flex;align-items:center;gap:8px;'>"+sh("ic-truck",14,"#059669")+"<p style='color:#065f46;font-size:14px;font-weight:600;'>"+xe(del)+"</p></div>":"");
+      sp("success");
+    }catch(e){
+      btn.innerHTML=sh("ic-store",22,"white")+" BUY NOW";
+      btn.disabled=false;
+      alert("অর্ডার ব্যর্থ: "+e.message);
+    }
+  }
+
+  document.getElementById("pubBack").addEventListener("click",function(){
+    window.location.hash="";sp("dash");renderDash();
+  });
+  document.getElementById("sucBack").addEventListener("click",function(){
+    var h=window.location.hash;
+    if(h.indexOf("#/form/")===0){loadPub(h.replace("#/form/",""));}
+    else{sp("dash");renderDash();}
+  });
+
+  /* ── INIT ── */
+  chkHash();
+  if(!window.location.hash)sp("login");
+})();
+</script>
+</body>
+</html>
